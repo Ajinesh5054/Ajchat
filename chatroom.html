@@ -1,0 +1,64 @@
+{% extends "base.html" %}
+{% block title %}{{ room.name }} · Chatroom{% endblock %}
+{% block content %}
+<div class="chat-layout">
+  <aside class="sidebar">
+    <div class="sidebar-top">
+      <h2>{{ room.name }}</h2>
+      <a href="{{ url_for('create_room') }}" class="small-link">+ New room</a>
+    </div>
+
+    {% if just_created %}
+    <div class="share-box">
+      <p>Chatroom created! Share this link to invite people (max {{ room.max_members }} members):</p>
+      <div class="share-row">
+        <input type="text" id="share-link" value="{{ share_link }}" readonly>
+        <button id="copy-btn" type="button">Copy</button>
+      </div>
+    </div>
+    {% else %}
+    <div class="share-box collapsed">
+      <button id="toggle-share" type="button" class="small-link">Show invite link</button>
+      <div class="share-row hidden" id="share-row">
+        <input type="text" id="share-link" value="{{ share_link }}" readonly>
+        <button id="copy-btn" type="button">Copy</button>
+      </div>
+    </div>
+    {% endif %}
+
+    <div class="member-count">Members: <span id="member-count">{{ member_count }}</span> / {{ room.max_members }}</div>
+
+    <h3>Online now</h3>
+    <ul id="online-list" class="online-list"></ul>
+
+    <a href="{{ url_for('logout') }}" class="logout-link">Log out</a>
+  </aside>
+
+  <main class="chat-main">
+    <div id="messages" class="messages">
+      {% for m in history %}
+      <div class="message {% if m.user.username == current_user.username %}self{% endif %}">
+        <span class="msg-user">{{ m.user.username }}</span>
+        <span class="msg-time">{{ m.timestamp.strftime('%H:%M') }}</span>
+        <div class="msg-content">{{ m.content }}</div>
+      </div>
+      {% endfor %}
+    </div>
+    <div id="typing-indicator" class="typing-indicator"></div>
+
+    <form id="message-form" class="message-form" autocomplete="off">
+      <input type="text" id="message-input" placeholder="Type a message..." required>
+      <button type="submit">Send</button>
+    </form>
+  </main>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.7.2/socket.io.min.js"></script>
+<script>
+  window.CHAT_CONFIG = {
+    roomId: {{ room.id | tojson }},
+    username: {{ current_user.username | tojson }}
+  };
+</script>
+<script src="{{ url_for('static', filename='js/chat.js') }}"></script>
+{% endblock %}
